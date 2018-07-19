@@ -7,13 +7,21 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.Fragment
+import android.util.Log.d
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import kotlinx.android.synthetic.main.activity_auth.view.*
+import com.firebase.ui.auth.AuthUI
+import kotlinx.android.synthetic.main.fragment_my_account.*
 import kotlinx.android.synthetic.main.fragment_my_account.view.*
-
+import org.jetbrains.anko.clearTask
+import org.jetbrains.anko.newTask
+import org.jetbrains.anko.support.v4.intentFor
+import org.premiumapp.myfamilymessanger.AuthActivity
 import org.premiumapp.myfamilymessanger.R
+import org.premiumapp.myfamilymessanger.glide.GlideApp
+import org.premiumapp.myfamilymessanger.utils.FirestoreUtil
+import org.premiumapp.myfamilymessanger.utils.StorageUtil
 import java.io.ByteArrayOutputStream
 
 class MyAccountFragment : Fragment() {
@@ -27,7 +35,7 @@ class MyAccountFragment : Fragment() {
         val view = inflater.inflate(R.layout.fragment_my_account, container, false)
 
         view.apply {
-            imageView_profile_picture.setOnClickListener{
+            imageView_profile_picture.setOnClickListener {
                 val intent = Intent().apply {
                     type = "image/"
                     action = Intent.ACTION_GET_CONTENT
@@ -36,8 +44,28 @@ class MyAccountFragment : Fragment() {
                 startActivityForResult(Intent.createChooser(intent, "Select Image"), RC_SELECT_IMAGE)
             }
 
-            btn_save.setOnClickListener{
-                if (::selectedImageBytes.isInitialized)
+            btn_save.setOnClickListener {
+
+                d("mylog", "Is initialized: ${::selectedImageBytes.isInitialized}")
+
+                if (::selectedImageBytes.isInitialized) {
+
+                    StorageUtil.uploadProfilePhoto(selectedImageBytes) { imagePath ->
+                        FirestoreUtil.updateCurrentUser(editText_name.text.toString(),
+                                editText_bio.text.toString(), imagePath)
+                    }
+                } else {
+                    FirestoreUtil.updateCurrentUser(editText_name.text.toString(),
+                            editText_bio.text.toString(), null)
+                }
+            }
+
+            btn_sign_out.setOnClickListener {
+                AuthUI.getInstance()
+                        .signOut(this@MyAccountFragment.context!!)
+                        .addOnCompleteListener {
+                            startActivity(intentFor<AuthActivity>().newTask().clearTask())
+                        }
             }
         }
         return view
@@ -54,10 +82,28 @@ class MyAccountFragment : Fragment() {
             selectedImageBmp.compress(Bitmap.CompressFormat.JPEG, 90, outputStream)
             selectedImageBytes = outputStream.toByteArray()
 
-//           TODO: Load picture
+            GlideApp.with(this)
+                    .load(selectedImageBytes)
+                    .into(imageView_profile_picture)
 
             pictureJustChanged = true
         }
     }
 
+    override fun onStart() {
+        super.onStart()
+        FirestoreUtil.getCurrentUser { user ->
+            if (isVisible) {
+                editText_name.setText(user.name)
+                editText_bio.setText(user.bio)
+                if (!pictureJustChanged && user.profilePicturePath != null) {
+
+                    GlideApp.with(this)
+                            .load(StorageUtil.pathToReference(user.profilePicturePath))
+                            .placeholder(R.drawable.ic_account_box_black_24dp)
+                            .into(imageView_profile_picture)
+                }
+            }
+        }
+    }
 }
