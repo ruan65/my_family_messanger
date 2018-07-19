@@ -37,7 +37,7 @@ class MyAccountFragment : Fragment() {
             }
 
             btn_save.setOnClickListener{
-
+                if (::selectedImageBytes.isInitialized)
             }
         }
         return view
