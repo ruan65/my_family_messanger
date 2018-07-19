@@ -7,7 +7,6 @@ import android.graphics.Bitmap
 import android.os.Bundle
 import android.provider.MediaStore
 import android.support.v4.app.Fragment
-import android.util.Log.d
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -17,6 +16,7 @@ import kotlinx.android.synthetic.main.fragment_my_account.view.*
 import org.jetbrains.anko.clearTask
 import org.jetbrains.anko.newTask
 import org.jetbrains.anko.support.v4.intentFor
+import org.jetbrains.anko.support.v4.toast
 import org.premiumapp.myfamilymessanger.AuthActivity
 import org.premiumapp.myfamilymessanger.R
 import org.premiumapp.myfamilymessanger.glide.GlideApp
@@ -46,8 +46,6 @@ class MyAccountFragment : Fragment() {
 
             btn_save.setOnClickListener {
 
-                d("mylog", "Is initialized: ${::selectedImageBytes.isInitialized}")
-
                 if (::selectedImageBytes.isInitialized) {
 
                     StorageUtil.uploadProfilePhoto(selectedImageBytes) { imagePath ->
@@ -58,6 +56,7 @@ class MyAccountFragment : Fragment() {
                     FirestoreUtil.updateCurrentUser(editText_name.text.toString(),
                             editText_bio.text.toString(), null)
                 }
+                toast("Saving...")
             }
 
             btn_sign_out.setOnClickListener {

@@ -38,7 +38,7 @@ object FirestoreUtil {
         currentUserDocRef.update(userFieldsMap)
     }
 
-    fun getCurrentUser(onComplete: (User) -> Unit) {
+    fun getCurrentUser(onComplete: (User?) -> Unit) {
 
         currentUserDocRef.get()
                 .addOnSuccessListener {
