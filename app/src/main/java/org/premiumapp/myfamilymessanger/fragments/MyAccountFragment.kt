@@ -93,9 +93,9 @@ class MyAccountFragment : Fragment() {
         super.onStart()
         FirestoreUtil.getCurrentUser { user ->
             if (isVisible) {
-                editText_name.setText(user.name)
-                editText_bio.setText(user.bio)
-                if (!pictureJustChanged && user.profilePicturePath != null) {
+                editText_name.setText(user?.name)
+                editText_bio.setText(user?.bio)
+                if (!pictureJustChanged && user?.profilePicturePath != null) {
 
                     GlideApp.with(this)
                             .load(StorageUtil.pathToReference(user.profilePicturePath))
